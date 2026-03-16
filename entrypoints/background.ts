@@ -181,6 +181,14 @@ async function fallbackDownload(srcUrl: string): Promise<void> {
   });
 }
 
+function getReadableFallbackMessage(error: unknown): string {
+  if (error instanceof Error && error.message) {
+    return error.message;
+  }
+
+  return "The image could not be converted, so SaveAsType will try downloading the original file.";
+}
+
 async function handleMenuClick(info: chrome.contextMenus.OnClickData): Promise<void> {
   if (!info.menuItemId || typeof info.menuItemId !== "string") {
     return;
@@ -221,8 +229,18 @@ async function handleMenuClick(info: chrome.contextMenus.OnClickData): Promise<v
     setTimeout(() => {
       URL.revokeObjectURL(response.url);
     }, DOWNLOAD_URL_REVOKE_DELAY_MS);
-  } catch {
-    await fallbackDownload(srcUrl);
+  } catch (error) {
+    const message = getReadableFallbackMessage(error);
+    console.warn(`SaveAsType: ${message}`);
+
+    try {
+      await fallbackDownload(srcUrl);
+    } catch (fallbackError) {
+      console.error(
+        `SaveAsType: ${message} Original download fallback also failed.`,
+        fallbackError,
+      );
+    }
   }
 }
 

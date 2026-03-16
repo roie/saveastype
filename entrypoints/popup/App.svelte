@@ -94,13 +94,14 @@
     <p class="summary">All conversions happen locally in your browser.</p>
   </header>
 
-  <section class="panel">
-    <h2>Format quality</h2>
+  <section class="panel" aria-labelledby="quality-heading">
+    <h2 id="quality-heading">Format quality</h2>
 
-    <label class="field">
+    <label class="field" for="jpeg-quality">
       <span>JPEG quality</span>
       <strong>{settings.jpegQuality}</strong>
       <input
+        id="jpeg-quality"
         type="range"
         min="1"
         max="100"
@@ -109,10 +110,11 @@
       />
     </label>
 
-    <label class="field">
+    <label class="field" for="webp-quality">
       <span>WebP quality</span>
       <strong>{settings.webpQuality}</strong>
       <input
+        id="webp-quality"
         type="range"
         min="1"
         max="100"
@@ -121,21 +123,25 @@
       />
     </label>
 
-    <label class="field">
+    <label class="field" for="avif-quality">
       <span>AVIF quality</span>
       <strong>{settings.avifQuality}</strong>
       <input
+        id="avif-quality"
         type="range"
         min="1"
         max="100"
         value={settings.avifQuality}
         disabled={avifUnsupported}
+        aria-describedby={avifUnsupported ? 'avif-support-note' : undefined}
         oninput={(event) => updateQuality('avifQuality', (event.currentTarget as HTMLInputElement).value)}
       />
     </label>
 
     {#if avifUnsupported}
-      <p class="hint">AVIF export is unavailable in this browser, so it is hidden from the menu.</p>
+      <p id="avif-support-note" class="hint" aria-live="polite">
+        AVIF export is unavailable in this browser, so it is hidden from the menu.
+      </p>
     {/if}
 
     <div class="field static">
@@ -144,9 +150,10 @@
     </div>
   </section>
 
-  <section class="panel">
-    <h2>Default format</h2>
-    <div class="choices">
+  <section class="panel" aria-labelledby="default-format-heading">
+    <h2 id="default-format-heading">Default format</h2>
+    <fieldset class="choices" aria-describedby="default-format-note">
+      <legend class="sr-only">Default context menu order</legend>
       {#each supportedFormats as format}
         <label class:selected={settings.defaultFormat === format}>
           <input
@@ -159,11 +166,14 @@
           <span>{format.toUpperCase()}</span>
         </label>
       {/each}
-    </div>
+    </fieldset>
+    <p id="default-format-note" class="hint">
+      The selected format appears first in the right-click menu when it is supported.
+    </p>
   </section>
 
-  <section class="panel">
-    <h2>Options</h2>
+  <section class="panel" aria-labelledby="options-heading">
+    <h2 id="options-heading">Options</h2>
     <label class="toggle">
       <div>
         <span>Strip metadata</span>
@@ -240,6 +250,18 @@
     color: #6a4d1f;
   }
 
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+
   .panel {
     display: grid;
     gap: 12px;
@@ -278,6 +300,10 @@
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 8px;
+    min-width: 0;
+    padding: 0;
+    margin: 0;
+    border: 0;
   }
 
   .choices label {
@@ -294,6 +320,18 @@
   .choices label.selected {
     border-color: #215d8c;
     background: #edf6ff;
+  }
+
+  .choices label:has(input:focus-visible),
+  .field:has(input:focus-visible),
+  .toggle:has(input:focus-visible) {
+    outline: 2px solid #215d8c;
+    outline-offset: 2px;
+  }
+
+  input:disabled {
+    cursor: not-allowed;
+    opacity: 0.55;
   }
 
   .toggle {

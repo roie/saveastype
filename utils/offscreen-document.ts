@@ -32,29 +32,101 @@ type OffscreenResponse =
       message: string;
     };
 
-async function loadImage(src: string): Promise<HTMLImageElement> {
+class ConversionError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "ConversionError";
+  }
+}
+
+async function loadImageElement(src: string, errorMessage: string): Promise<HTMLImageElement> {
+  return await new Promise<HTMLImageElement>((resolve, reject) => {
+    const image = new Image();
+
+    image.onload = () => {
+      resolve(image);
+    };
+
+    image.onerror = () => {
+      reject(new ConversionError(errorMessage));
+    };
+
+    image.src = src;
+  });
+}
+
+async function loadImageFromFetchedBlob(src: string): Promise<HTMLImageElement> {
   const response = await fetch(src);
   if (!response.ok) {
-    throw new Error(`Failed to fetch image (${response.status})`);
+    if (response.status === 401 || response.status === 403) {
+      throw new ConversionError("This site blocked the image request needed for conversion.");
+    }
+
+    throw new ConversionError(
+      `The image could not be fetched for conversion (${response.status}).`,
+    );
   }
 
   const blob = await response.blob();
   const objectUrl = URL.createObjectURL(blob);
 
-  return await new Promise<HTMLImageElement>((resolve, reject) => {
-    const image = new Image();
+  try {
+    return await loadImageElement(
+      objectUrl,
+      blob.type === "image/svg+xml"
+        ? "This SVG could not be loaded for conversion."
+        : "The image data could not be loaded for conversion.",
+    );
+  } finally {
+    URL.revokeObjectURL(objectUrl);
+  }
+}
 
-    image.onload = () => {
-      URL.revokeObjectURL(objectUrl);
-      resolve(image);
-    };
+async function loadImage(src: string): Promise<HTMLImageElement> {
+  if (src.startsWith("data:")) {
+    return await loadImageElement(src, "This embedded image data could not be read.");
+  }
 
-    image.onerror = () => {
-      URL.revokeObjectURL(objectUrl);
-      reject(new Error("Failed to load image"));
-    };
+  if (src.startsWith("blob:")) {
+    try {
+      return await loadImageFromFetchedBlob(src);
+    } catch {
+      return await loadImageElement(
+        src,
+        "This temporary blob image could not be accessed for conversion. Try opening the image in a new tab first.",
+      );
+    }
+  }
 
-    image.src = objectUrl;
+  return await loadImageFromFetchedBlob(src);
+}
+
+async function exportCanvas(
+  canvas: HTMLCanvasElement,
+  mimeType: string,
+  quality: number | undefined,
+): Promise<Blob> {
+  return await new Promise<Blob>((resolve, reject) => {
+    try {
+      canvas.toBlob(
+        (result) => {
+          if (!result) {
+            reject(new ConversionError("The browser could not create the converted image file."));
+            return;
+          }
+
+          resolve(result);
+        },
+        mimeType,
+        quality,
+      );
+    } catch {
+      reject(
+        new ConversionError(
+          "This image source cannot be exported from canvas in the current browser context.",
+        ),
+      );
+    }
   });
 }
 
@@ -64,9 +136,13 @@ async function convertImage(message: ConvertMessage): Promise<OffscreenResponse>
   canvas.width = image.naturalWidth;
   canvas.height = image.naturalHeight;
 
+  if (!canvas.width || !canvas.height) {
+    throw new ConversionError("The source image did not contain readable dimensions.");
+  }
+
   const context = canvas.getContext("2d");
   if (!context) {
-    throw new Error("Failed to create canvas context");
+    throw new ConversionError("The browser could not create a canvas for image conversion.");
   }
 
   if (message.format === "jpeg") {
@@ -78,25 +154,11 @@ async function convertImage(message: ConvertMessage): Promise<OffscreenResponse>
 
   const mimeType = getMimeType(message.format);
   const quality = getCanvasQuality(message.format, message.quality);
-
-  const blob = await new Promise<Blob>((resolve, reject) => {
-    canvas.toBlob(
-      (result) => {
-        if (!result) {
-          reject(new Error("Failed to convert image"));
-          return;
-        }
-
-        resolve(result);
-      },
-      mimeType,
-      quality,
-    );
-  });
+  const blob = await exportCanvas(canvas, mimeType, quality);
 
   if (blob.type !== mimeType) {
-    throw new Error(
-      `Requested ${message.format.toUpperCase()} export is not supported in this browser`,
+    throw new ConversionError(
+      `Requested ${message.format.toUpperCase()} export is not supported in this browser.`,
     );
   }
 
@@ -145,7 +207,10 @@ chrome.runtime.onMessage.addListener((message: ConvertMessage | SupportedFormats
         const response: OffscreenResponse = {
           type: "error",
           requestId: message.requestId,
-          message: error instanceof Error ? error.message : "Failed to convert image",
+          message:
+            error instanceof Error
+              ? error.message
+              : "This image could not be converted in the browser.",
         };
 
         return chrome.runtime.sendMessage(response);
