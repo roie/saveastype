@@ -1,0 +1,16 @@
+pre-commit:
+  parallel: true
+  commands:
+    lint:
+      glob: "*.{ts,svelte}"
+      run: bunx oxlint {staged_files}
+    format:
+      glob: "*.{ts,svelte,json,md}"
+      run: bunx oxfmt --check {staged_files}
+    knip:
+      run: bun knip
+
+commit-msg:
+  commands:
+    commitlint:
+      run: bunx commitlint --edit {1}
