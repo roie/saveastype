@@ -29,12 +29,12 @@ No `tabs`, no `activeTab`, no `scripting`, no `<all_urls>`.
 
 ## Format Support
 
-| Format | Availability | Quality setting |
-|--------|-------------|-----------------|
-| PNG | Always | Lossless — no quality setting |
-| JPEG | Always | Adjustable (default 92%) |
-| WebP | When browser supports canvas export | Adjustable (default 85%) |
-| AVIF | When browser supports canvas export | Adjustable (default 80%) |
+| Format | Availability                        | Quality setting               |
+| ------ | ----------------------------------- | ----------------------------- |
+| PNG    | Always                              | Lossless — no quality setting |
+| JPEG   | Always                              | Adjustable (default 92%)      |
+| WebP   | When browser supports canvas export | Adjustable (default 85%)      |
+| AVIF   | When browser supports canvas export | Adjustable (default 80%)      |
 
 WebP and AVIF are hidden from the menu and popup when the current browser cannot encode them. If a format becomes unavailable, SaveAsType falls back to downloading the original file.
 
