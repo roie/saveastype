@@ -45,14 +45,6 @@ jobs:
       - name: Package extension
         run: bun run zip
 
-      - name: Submit to Chrome Web Store
-        env:
-          CHROME_EXTENSION_ID: ${{ secrets.CHROME_EXTENSION_ID }}
-          CHROME_CLIENT_ID: ${{ secrets.CHROME_CLIENT_ID }}
-          CHROME_CLIENT_SECRET: ${{ secrets.CHROME_CLIENT_SECRET }}
-          CHROME_REFRESH_TOKEN: ${{ secrets.CHROME_REFRESH_TOKEN }}
-        run: bunx wxt submit
-
       - name: Upload zip artifact
         uses: softprops/action-gh-release@v2
         with:
