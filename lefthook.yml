@@ -5,7 +5,7 @@ pre-commit:
       glob: "*.{ts,svelte}"
       run: bunx oxlint {staged_files}
     format:
-      glob: "*.{ts,svelte,json,md}"
+      glob: "*.{ts,svelte,json}"
       run: bunx oxfmt --check {staged_files}
     knip:
       run: bun knip

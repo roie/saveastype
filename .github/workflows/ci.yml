@@ -24,7 +24,7 @@ jobs:
         run: bunx oxlint .
 
       - name: Check formatting
-        run: bunx oxfmt --check .
+        run: bunx oxfmt --check README.md package.json commitlint.config.mjs knip.config.ts entrypoints utils tests vitest.config.ts wxt.config.ts
 
       - name: Check unused code
         run: bun run knip

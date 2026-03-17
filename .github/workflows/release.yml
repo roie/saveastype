@@ -15,6 +15,7 @@ jobs:
 
     outputs:
       release_created: ${{ steps.release.outputs.release_created }}
+      tag_name: ${{ steps.release.outputs.tag_name }}
 
     steps:
       - name: Run Release Please
@@ -48,4 +49,5 @@ jobs:
       - name: Upload zip artifact
         uses: softprops/action-gh-release@v2
         with:
+          tag_name: ${{ needs.release-please.outputs.tag_name }}
           files: .output/*.zip
