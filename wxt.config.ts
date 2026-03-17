@@ -1,4 +1,9 @@
+import { readFileSync } from "node:fs";
 import { defineConfig } from "wxt";
+
+const packageJson = JSON.parse(
+  readFileSync(new URL("./package.json", import.meta.url), "utf8"),
+) as { version: string };
 
 export default defineConfig({
   manifestVersion: 3,
@@ -7,7 +12,7 @@ export default defineConfig({
     name: "SaveAsType",
     description:
       "Right-click any image to save it as PNG, JPEG, WebP, or AVIF. Fast, local, open-source.",
-    version: "0.1.0",
+    version: packageJson.version,
     permissions: ["contextMenus", "downloads", "offscreen", "storage"],
     host_permissions: [],
     action: {
