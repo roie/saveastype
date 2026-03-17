@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.0.1](https://github.com/roie/saveastype/compare/v1.0.0...v1.0.1) (2026-03-17)
+
+
+### Bug Fixes
+
+* derive extension version from package metadata ([014766a](https://github.com/roie/saveastype/commit/014766aa4932c8b276113407198e7763f4d36572))
+
 ## 1.0.0 (2026-03-17)
 
 
